@@ -1,2 +1,0 @@
-Fill.text,Fill.data,Fill.bss,Misc.text,Misc.data,Misc.bss,hal/common.text,hal/common.data,hal/common.bss,hal/targets.text,hal/targets.data,hal/targets.bss,rtos/rtos.text,rtos/rtos.data,rtos/rtos.bss,rtos/rtx.text,rtos/rtx.data,rtos/rtx.bss,static_ram,heap,stack,total_ram,total_flash
-79,0,2477,27843,2476,88,1506,4,277,10020,12,188,22,4,0,5717,20,6786,0,unknown,unknown,0,1040
