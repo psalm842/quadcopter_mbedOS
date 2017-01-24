@@ -14,14 +14,14 @@ void fall_handler(void) {
     fallCounter++; 
 }
 
-void periodCalculator(void) {
+void periodCalculator(void const *n) {
 	float frequency = (float)riseCounter/float(pwmFreqCalculationPeriod)*1000;
 	//TODO: Calculate pulseWidth
 }
 
 
 int main() {
-	RtosTimer periodTimer(periodCalculator, osTimerPeriodic);
+	RtosTimer periodTimer(periodCalculator, osTimerPeriodic, (void *)0);
     
     periodTimer.start(pwmFreqCalculationPeriod);
     
