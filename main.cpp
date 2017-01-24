@@ -6,29 +6,31 @@ uint32_t riseCounter = 0;
 uint32_t fallCounter = 0;
 const uint16_t pwmFreqCalculationPeriod = 10; //ms
 
-void rise_handler(void) {
+void countRisingEdges(void) {
     riseCounter++; 
 }
 
-void fall_handler(void) {
+void countFallingEdges(void) {
     fallCounter++; 
 }
 
-void periodCalculator(void const *n) {
+void periodCalculator(void) {
 	float frequency = (float)riseCounter/float(pwmFreqCalculationPeriod)*1000;
 	//TODO: Calculate pulseWidth
 }
 
 
 int main() {
-	RtosTimer periodTimer(periodCalculator, osTimerPeriodic, (void *)0);
-    
-    periodTimer.start(pwmFreqCalculationPeriod);
+	printf("Testing 1,2,3...");
+
+	// creates a queue to hold 2 events
+    EventQueue queue(2*EVENTS_EVENT_SIZE);
+    queue.call_every(10,pwmFreqCalculationPeriod);
     
 	pwmOut1.period(0.0005f);
 	pwmOut1.write(0.5f);
-    sw.rise(rise_handler);
-    sw.fall(fall_handler);
+    sw.rise(countRisingEdges);
+    sw.fall(countFallingEdges);
 
     Thread::wait(osWaitForever);
 }
