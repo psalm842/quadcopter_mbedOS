@@ -10,11 +10,12 @@
 #define FTM_READ_INPUT_CAPTURE  FTM0->CONTROLS[kFTM_Chnl_3].CnV  
 
 PwmOut pwmOut1(PTD0);
-uint32_t pwmFreqCalculationPeriod = 5; // ms
+uint32_t pwmFreqCalculationPeriod = 100; // ms
 
 void calculatePeriod(void) {
 	float frequency = (float)FTM_READ_INPUT_CAPTURE/float(pwmFreqCalculationPeriod)*1000;
 	float period = 1/frequency;
+	printf("Channel Value is: %i\r\n", FTM_READ_INPUT_CAPTURE);
 }
 
 
