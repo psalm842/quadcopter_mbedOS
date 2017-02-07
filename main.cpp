@@ -1,5 +1,7 @@
 #include "mbed.h"
 #include "fsl_ftm.h"
+#include "fsl_port.h"
+#include "hal/pinmap.h"
 
 /******************************************************************************* 
  * Definitions 
@@ -7,38 +9,42 @@
 /* Get source clock for FTM driver */  
 #define FTM_SOURCE_CLOCK            CLOCK_GetFreq(kCLOCK_BusClk)  
   
-#define FTM_READ_INPUT_CAPTURE  FTM0->CONTROLS[kFTM_Chnl_3].CnV  
+#define FTM_READ_INPUT_CAPTURE  FTM0->CONTROLS[kFTM_Chnl_7].CnV  
 
 PwmOut pwmOut1(PTD0);
 uint32_t pwmFreqCalculationPeriod = 100; // ms
 
 void calculatePeriod(void) {
-	float frequency = (float)FTM_READ_INPUT_CAPTURE/float(pwmFreqCalculationPeriod)*1000;
-	float period = 1/frequency;
-	printf("Channel Value is: %i\r\n", FTM_READ_INPUT_CAPTURE);
+	//float frequency = (float)FTM_READ_INPUT_CAPTURE/float(pwmFreqCalculationPeriod)*1000;
+	//float period = 1/frequency;
+	printf("Channel Value is: %x\r\n", FTM_READ_INPUT_CAPTURE);
 }
 
 
 int main() {
+	pin_function(PTA2, kPORT_MuxAlt4);
+	//PORTA->PCR[2] = PORTA->PCR[2] & ~PORT_PCR_MUX_MASK | PORT_PCR_MUX(kPORT_MuxAlt4);
 	ftm_config_t ftmInfo;    
   
     /* Print a note to terminal */  
     printf("\r\nFTM input capture example\r\n");  
+    
+    //printf("Port A, PCR2 Register Value: %x",PORTA->PCR[2]);
   
     FTM_GetDefaultConfig(&ftmInfo);  
     /* Initialize FTM module */  
-    FTM_Init(FTM0, &ftmInfo);  
+    FTM_Init(FTM0, &ftmInfo);
   
-    FTM_SetupInputCapture(FTM0, kFTM_Chnl_3, kFTM_RisingEdge, 0);  
-    FTM0->MOD = 0xFFFF;  
-    FTM_StartTimer(FTM0, kFTM_SystemClock);  
-
+    FTM_SetupInputCapture(FTM0, kFTM_Chnl_7, kFTM_RisingEdge, 0);
+    FTM0->MOD = 0xFFFF;
+    FTM_StartTimer(FTM0, kFTM_SystemClock);
+    
 	// creates a queue to hold 1 events
     EventQueue queue(1*EVENTS_EVENT_SIZE);
     queue.call_every(pwmFreqCalculationPeriod,calculatePeriod);
     queue.dispatch();
 
-	pwmOut1.period_us(125);
+	pwmOut1.period(100);
 	pwmOut1.write(0.5f);
 }
 
