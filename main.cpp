@@ -2,6 +2,7 @@
 #include "fsl_ftm.h"
 #include "fsl_port.h"
 #include "hal/pinmap.h"
+#include "MK64F12.h"
 
 /******************************************************************************* 
  * Definitions 
@@ -9,43 +10,68 @@
 /* Get source clock for FTM driver */  
 #define FTM_SOURCE_CLOCK            CLOCK_GetFreq(kCLOCK_BusClk)  
   
-#define FTM_READ_INPUT_CAPTURE  FTM0->CONTROLS[kFTM_Chnl_7].CnV  
+#define FTM_READ_INPUT_CAPTURE  FTM3->CONTROLS[kFTM_Chnl_0].CnV  
 
-PwmOut pwmOut1(PTD0);
-uint32_t pwmFreqCalculationPeriod = 100; // ms
+//PwmOut pwmOut1(PTD0);
+uint32_t pwmFreqCalculationPeriod = 2000; // ms
 
 void calculatePeriod(void) {
 	//float frequency = (float)FTM_READ_INPUT_CAPTURE/float(pwmFreqCalculationPeriod)*1000;
 	//float period = 1/frequency;
-	printf("Channel Value is: %x\r\n", FTM_READ_INPUT_CAPTURE);
+	printf("Channel Value is: %i\r\n", FTM_READ_INPUT_CAPTURE);
 }
 
 
 int main() {
 	pin_function(PTA2, kPORT_MuxAlt4);
-	//PORTA->PCR[2] = PORTA->PCR[2] & ~PORT_PCR_MUX_MASK | PORT_PCR_MUX(kPORT_MuxAlt4);
+    pin_mode(PTA2,PullNone);
+    pin_function(PTD0, kPORT_MuxAlt4);
+    pin_mode(PTD0, PullNone);
+
+
+    uint32_t pwm_base_clock;
+    pwm_base_clock = CLOCK_GetFreq(kCLOCK_BusClk);
+    float clkval = (float)pwm_base_clock / 1000000.0f;
+    uint32_t clkdiv = 0;
+    while (clkval > 1) {
+        clkdiv++;
+        clkval /= 2.0f;
+        if (clkdiv == 7) {
+            break;
+        }
+    }
+
 	ftm_config_t ftmInfo;    
-  
-    /* Print a note to terminal */  
-    printf("\r\nFTM input capture example\r\n");  
-    
-    //printf("Port A, PCR2 Register Value: %x",PORTA->PCR[2]);
-  
-    FTM_GetDefaultConfig(&ftmInfo);  
+    FTM_GetDefaultConfig(&ftmInfo); 
+    ftmInfo.prescale = (ftm_clock_prescale_t)clkdiv; 
     /* Initialize FTM module */  
     FTM_Init(FTM0, &ftmInfo);
-  
-    FTM_SetupInputCapture(FTM0, kFTM_Chnl_7, kFTM_RisingEdge, 0);
-    FTM0->MOD = 0xFFFF;
-    FTM_StartTimer(FTM0, kFTM_SystemClock);
+    FTM_Init(FTM3, &ftmInfo);
     
-	// creates a queue to hold 1 events
+    /* Print a note to terminal */  
+    printf("\r\nFTM input capture example\r\n");  
+    //printf("Port A, PCR2 Register Value: %x",PORTA->PCR[2]);
+
+    ftm_chnl_pwm_signal_param_t config = {
+        .chnlNumber = kFTM_Chnl_7,
+        .level = kFTM_HighTrue,
+        .dutyCyclePercent = 20,
+        .firstEdgeDelayPercent = 0
+    };
+
+
+    FTM_SetupPwm(FTM0, &config, 1, kFTM_EdgeAlignedPwm, 50, 1);
+    FTM_StartTimer(FTM0, kFTM_SystemClock);
+
+
+    FTM_SetupInputCapture(FTM3, kFTM_Chnl_0, kFTM_RisingEdge, 0);
+    //FTM0->MOD = 0xFFFF;
+    FTM_StartTimer(FTM3, kFTM_SystemClock);
+
+    // creates a queue to hold 1 events
     EventQueue queue(1*EVENTS_EVENT_SIZE);
     queue.call_every(pwmFreqCalculationPeriod,calculatePeriod);
     queue.dispatch();
-
-	pwmOut1.period(100);
-	pwmOut1.write(0.5f);
 }
 
 
