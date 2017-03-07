@@ -4,13 +4,13 @@
 #include "hal/pinmap.h"
 #include "MK64F12.h"
 
-/******************************************************************************* 
- * Definitions 
- ******************************************************************************/  
-/* Get source clock for FTM driver */  
-#define FTM_SOURCE_CLOCK            CLOCK_GetFreq(kCLOCK_BusClk)  
-  
-#define FTM_READ_INPUT_CAPTURE  FTM3->CONTROLS[kFTM_Chnl_0].CnV  
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
+/* Get source clock for FTM driver */
+#define FTM_SOURCE_CLOCK            CLOCK_GetFreq(kCLOCK_BusClk)
+
+#define FTM_READ_INPUT_CAPTURE  FTM3->CONTROLS[kFTM_Chnl_0].CnV
 
 PwmOut pwmOut1(PTA2);
 
@@ -22,18 +22,18 @@ void calculatePeriod(void) {
 	//float period = 1/frequency;
     CnVPrev = CnV;
     CnV = FTM_READ_INPUT_CAPTURE;
-    uint32_t status = FTM_GetStatusFlags(FTM3);  
-    if (status & kFTM_TimeOverflowFlag) {  
-        FTM_ClearStatusFlags(FTM3, status);  
-    }  
-	
+    uint32_t status = FTM_GetStatusFlags(FTM3);
+    if (status & kFTM_TimeOverflowFlag) {
+        FTM_ClearStatusFlags(FTM3, status);
+    }
+
     if (CnV != CnVPrev)
     {
         //printf("Channel Value is: %i\r\n", CnV);
         //printf("Prev Channel Value is: %i\r\n", CnVPrev);
         //printf("Period is: %i\r\n", CnV-CnVPrev);
     }
-    
+
 }
 
 
@@ -54,16 +54,16 @@ int main() {
         }
     }
 
-	ftm_config_t ftmInfo;    
-    FTM_GetDefaultConfig(&ftmInfo); 
-    ftmInfo.prescale = (ftm_clock_prescale_t)clkdiv; 
-    // Initialize FTM module  
+	ftm_config_t ftmInfo;
+    FTM_GetDefaultConfig(&ftmInfo);
+    ftmInfo.prescale = (ftm_clock_prescale_t)clkdiv;
+    // Initialize FTM module
     FTM_Init(FTM3, &ftmInfo);
-    
-    // Print a note to terminal 
-    printf("\r\nFTM input capture example\r\n"); 
+
+    // Print a note to terminal
+    printf("\r\nFTM input capture example\r\n");
     printf("clkval is %i\r\n", clkval);
-    printf("clkdiv is %i\r\n", clkdiv); 
+    printf("clkdiv is %i\r\n", clkdiv);
 
     FTM_SetupInputCapture(FTM3, kFTM_Chnl_0, kFTM_RisingEdge, 0);
     FTM3->MOD = 0xFFFF; // Modulo register must not be 0 for counter to work, see documentation
@@ -71,9 +71,9 @@ int main() {
 
     pwmOut1.period(0.020f); // 20ms
     pwmOut1.write(0.50f);
-    
+
     // creates a queue to hold 1 events
     EventQueue queue(1*EVENTS_EVENT_SIZE);
-    queue.call_every(1,calculatePeriod); //10ms 
+    queue.call_every(1,calculatePeriod); //10ms
     queue.dispatch();
 }
