@@ -14,10 +14,26 @@
 
 PwmOut pwmOut1(PTA2);
 
+uint16_t CnV;
+uint16_t CnVPrev;
+
 void calculatePeriod(void) {
 	//float frequency = (float)FTM_READ_INPUT_CAPTURE/float(pwmFreqCalculationPeriod)*1000;
 	//float period = 1/frequency;
-	printf("Channel Value is: %i\r\n", FTM_READ_INPUT_CAPTURE);
+    CnVPrev = CnV;
+    CnV = FTM_READ_INPUT_CAPTURE;
+    uint32_t status = FTM_GetStatusFlags(FTM3);  
+    if (status & kFTM_TimeOverflowFlag) {  
+        FTM_ClearStatusFlags(FTM3, status);  
+    }  
+	
+    if (CnV != CnVPrev)
+    {
+        //printf("Channel Value is: %i\r\n", CnV);
+        //printf("Prev Channel Value is: %i\r\n", CnVPrev);
+        //printf("Period is: %i\r\n", CnV-CnVPrev);
+    }
+    
 }
 
 
@@ -45,17 +61,19 @@ int main() {
     FTM_Init(FTM3, &ftmInfo);
     
     // Print a note to terminal 
-    printf("\r\nFTM input capture example\r\n");  
+    printf("\r\nFTM input capture example\r\n"); 
+    printf("clkval is %i\r\n", clkval);
+    printf("clkdiv is %i\r\n", clkdiv); 
 
     FTM_SetupInputCapture(FTM3, kFTM_Chnl_0, kFTM_RisingEdge, 0);
     FTM3->MOD = 0xFFFF; // Modulo register must not be 0 for counter to work, see documentation
     FTM_StartTimer(FTM3, kFTM_SystemClock);
 
-    pwmOut1.period(0.010f); // 10ms
+    pwmOut1.period(0.020f); // 20ms
     pwmOut1.write(0.50f);
     
     // creates a queue to hold 1 events
     EventQueue queue(1*EVENTS_EVENT_SIZE);
-    queue.call_every(20,calculatePeriod); //20ms 
+    queue.call_every(1,calculatePeriod); //10ms 
     queue.dispatch();
 }
