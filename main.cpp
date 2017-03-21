@@ -4,6 +4,10 @@
 #include "hal/pinmap.h"
 #include "MK64F12.h"
 
+// Radio Frequency Receiver Output: Period is 18.4ms (~54Hz), Duty cycle is 8%, varies between 6% to 10%
+// Motor Control output signal: Period is 2.5 ms (~400Hz), Duty cycle is 44% @ 0 thrust (up to 50% seems to do nothing), 80% duty cycle is 100% thrust (at least from flight controller)
+
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
